@@ -1,0 +1,49 @@
+{
+  "policies": {
+    "standard_refund_window_days": 30,
+    "opened_electronics_refundable": false,
+    "final_sale_categories": ["clearance"],
+    "not_delivered_statuses": ["processing", "shipped"]
+  },
+  "customers": [
+    {"customer_id": "cust_001", "name": "Maya Chen", "email": "maya@example.com"},
+    {"customer_id": "cust_002", "name": "Jordan Patel", "email": "jordan@example.com"},
+    {"customer_id": "cust_003", "name": "Riley Brooks", "email": "riley@example.com"},
+    {"customer_id": "cust_004", "name": "Sofia Garcia", "email": "sofia@example.com"},
+    {"customer_id": "cust_005", "name": "Noah Smith", "email": "noah@example.com"},
+    {"customer_id": "cust_006", "name": "Ava Johnson", "email": "ava@example.com"},
+    {"customer_id": "cust_007", "name": "Liam Brown", "email": "liam@example.com"},
+    {"customer_id": "cust_008", "name": "Emma Davis", "email": "emma@example.com"},
+    {"customer_id": "cust_009", "name": "Mason Wilson", "email": "mason@example.com"},
+    {"customer_id": "cust_010", "name": "Olivia Martinez", "email": "olivia@example.com"},
+    {"customer_id": "cust_011", "name": "Ethan Lee", "email": "ethan@example.com"},
+    {"customer_id": "cust_012", "name": "Isabella Taylor", "email": "isabella@example.com"}
+  ],
+  "orders": [
+    {"order_id": "ord_1001", "customer_id": "cust_001", "item": "headphones", "category": "electronics", "status": "delivered", "delivered_days_ago": 12, "opened": false},
+    {"order_id": "ord_1002", "customer_id": "cust_001", "item": "phone case", "category": "accessories", "status": "delivered", "delivered_days_ago": 45, "opened": true},
+    {"order_id": "ord_1003", "customer_id": "cust_001", "item": "desk lamp", "category": "home", "status": "shipped", "delivered_days_ago": null, "opened": false},
+    {"order_id": "ord_1004", "customer_id": "cust_002", "item": "running shoes", "category": "apparel", "status": "delivered", "delivered_days_ago": 8, "opened": true},
+    {"order_id": "ord_1005", "customer_id": "cust_002", "item": "wireless mouse", "category": "electronics", "status": "delivered", "delivered_days_ago": 5, "opened": true},
+    {"order_id": "ord_1006", "customer_id": "cust_003", "item": "winter coat", "category": "apparel", "status": "processing", "delivered_days_ago": null, "opened": false},
+    {"order_id": "ord_1007", "customer_id": "cust_003", "item": "throw blanket", "category": "home", "status": "delivered", "delivered_days_ago": 31, "opened": false},
+    {"order_id": "ord_1008", "customer_id": "cust_004", "item": "tablet", "category": "electronics", "status": "delivered", "delivered_days_ago": 28, "opened": false},
+    {"order_id": "ord_1009", "customer_id": "cust_004", "item": "clearance vase", "category": "clearance", "status": "delivered", "delivered_days_ago": 4, "opened": false},
+    {"order_id": "ord_1010", "customer_id": "cust_005", "item": "backpack", "category": "accessories", "status": "cancelled", "delivered_days_ago": null, "opened": false},
+    {"order_id": "ord_1011", "customer_id": "cust_005", "item": "keyboard", "category": "electronics", "status": "delivered", "delivered_days_ago": 60, "opened": false},
+    {"order_id": "ord_1012", "customer_id": "cust_006", "item": "coffee maker", "category": "home", "status": "delivered", "delivered_days_ago": 2, "opened": true},
+    {"order_id": "ord_1013", "customer_id": "cust_006", "item": "socks", "category": "apparel", "status": "delivered", "delivered_days_ago": 17, "opened": false},
+    {"order_id": "ord_1014", "customer_id": "cust_007", "item": "monitor", "category": "electronics", "status": "shipped", "delivered_days_ago": null, "opened": false},
+    {"order_id": "ord_1015", "customer_id": "cust_007", "item": "notebook set", "category": "accessories", "status": "delivered", "delivered_days_ago": 29, "opened": false},
+    {"order_id": "ord_1016", "customer_id": "cust_008", "item": "area rug", "category": "home", "status": "delivered", "delivered_days_ago": 35, "opened": true},
+    {"order_id": "ord_1017", "customer_id": "cust_008", "item": "fitness tracker", "category": "electronics", "status": "delivered", "delivered_days_ago": 1, "opened": false},
+    {"order_id": "ord_1018", "customer_id": "cust_009", "item": "jacket", "category": "apparel", "status": "delivered", "delivered_days_ago": 14, "opened": false},
+    {"order_id": "ord_1019", "customer_id": "cust_009", "item": "charging cable", "category": "accessories", "status": "processing", "delivered_days_ago": null, "opened": false},
+    {"order_id": "ord_1020", "customer_id": "cust_010", "item": "bookshelf", "category": "home", "status": "delivered", "delivered_days_ago": 30, "opened": false},
+    {"order_id": "ord_1021", "customer_id": "cust_010", "item": "earbuds", "category": "electronics", "status": "delivered", "delivered_days_ago": 30, "opened": true},
+    {"order_id": "ord_1022", "customer_id": "cust_011", "item": "belt", "category": "accessories", "status": "cancelled", "delivered_days_ago": null, "opened": false},
+    {"order_id": "ord_1023", "customer_id": "cust_011", "item": "hoodie", "category": "apparel", "status": "delivered", "delivered_days_ago": 3, "opened": true},
+    {"order_id": "ord_1024", "customer_id": "cust_012", "item": "air purifier", "category": "home", "status": "delivered", "delivered_days_ago": 90, "opened": false},
+    {"order_id": "ord_1025", "customer_id": "cust_012", "item": "smart speaker", "category": "electronics", "status": "delivered", "delivered_days_ago": 10, "opened": false}
+  ]
+}

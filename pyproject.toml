@@ -1,0 +1,13 @@
+[project]
+name = "tool-trace-rag"
+version = "0.1.0"
+description = "Tool trace memory harness for agent experiments"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
