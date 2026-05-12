@@ -4,9 +4,10 @@ import json
 import re
 from pathlib import Path
 
+from tool_trace_rag.config import TRACE_DIR
 from tool_trace_rag.traces.schema import AgentRunTrace
 
-DEFAULT_TRACE_DIR = Path("runs/traces")
+DEFAULT_TRACE_DIR = TRACE_DIR
 
 
 class TraceStore:

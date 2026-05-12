@@ -2,21 +2,63 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
+from tool_trace_rag.config import CUSTOMER_SUPPORT_DATA_PATH
 from tool_trace_rag.tools.registry import ToolDefinition, ToolRegistry
 
 
-class CustomerSupportTools:
+class CustomerSupportAdapter(Protocol):
+    def customers(self) -> list[dict[str, Any]]: ...
+
+    def orders(self) -> list[dict[str, Any]]: ...
+
+    def policies(self) -> dict[str, Any]: ...
+
+
+class JsonCustomerSupportAdapter:
     def __init__(self, data_path: str | Path) -> None:
-        data = json.loads(Path(data_path).read_text(encoding="utf-8"))
-        self.customers: list[dict[str, Any]] = data["customers"]
-        self.orders: list[dict[str, Any]] = data["orders"]
-        self.policies: dict[str, Any] = data["policies"]
+        self._data = json.loads(Path(data_path).read_text(encoding="utf-8"))
+
+    def customers(self) -> list[dict[str, Any]]:
+        return self._data["customers"]
+
+    def orders(self) -> list[dict[str, Any]]:
+        return self._data["orders"]
+
+    def policies(self) -> dict[str, Any]:
+        return self._data["policies"]
+
+
+class InMemoryCustomerSupportAdapter:
+    def __init__(
+        self,
+        *,
+        customers: list[dict[str, Any]],
+        orders: list[dict[str, Any]],
+        policies: dict[str, Any],
+    ) -> None:
+        self._customers = customers
+        self._orders = orders
+        self._policies = policies
+
+    def customers(self) -> list[dict[str, Any]]:
+        return self._customers
+
+    def orders(self) -> list[dict[str, Any]]:
+        return self._orders
+
+    def policies(self) -> dict[str, Any]:
+        return self._policies
+
+
+class RefundPolicyModule:
+    def __init__(self, adapter: CustomerSupportAdapter) -> None:
+        self._adapter = adapter
 
     def find_customer(self, query: str) -> dict[str, Any]:
         normalized_query = query.strip().lower()
-        for customer in self.customers:
+        for customer in self._adapter.customers():
             if normalized_query in {
                 customer["customer_id"].lower(),
                 customer["name"].lower(),
@@ -31,7 +73,7 @@ class CustomerSupportTools:
         }
 
     def get_customer_orders(self, customer_id: str) -> dict[str, Any]:
-        customer_orders = [order for order in self.orders if order["customer_id"] == customer_id]
+        customer_orders = [order for order in self._adapter.orders() if order["customer_id"] == customer_id]
         if not customer_orders:
             return {
                 "status": "not_found",
@@ -70,30 +112,35 @@ class CustomerSupportTools:
                 "message": "No order matched order_id.",
             }
 
-        if order["status"] in self.policies["not_delivered_statuses"]:
+        policies = self._adapter.policies()
+        if order["status"] in policies["not_delivered_statuses"]:
             return self._refund_result(order_id, False, "Order has not been delivered yet.")
         if order["status"] == "cancelled":
             return self._refund_result(order_id, False, "Cancelled orders are not refundable.")
-        if order["category"] in self.policies["final_sale_categories"]:
+        if order["category"] in policies["final_sale_categories"]:
             return self._refund_result(order_id, False, "Final sale items are not refundable.")
-        if order["category"] == "electronics" and order["opened"] and not self.policies["opened_electronics_refundable"]:
+        if order["category"] == "electronics" and order["opened"] and not policies["opened_electronics_refundable"]:
             return self._refund_result(order_id, False, "Opened electronics are not refundable.")
         if order["delivered_days_ago"] is None:
             return self._refund_result(order_id, False, "Order has not been delivered yet.")
-        if order["delivered_days_ago"] > self.policies["standard_refund_window_days"]:
+        if order["delivered_days_ago"] > policies["standard_refund_window_days"]:
             return self._refund_result(order_id, False, "Order is outside the 30-day refund window.")
         return self._refund_result(order_id, True, "Order is within the 30-day refund window.")
 
     def _find_order(self, order_id: str) -> dict[str, Any] | None:
-        return next((order for order in self.orders if order["order_id"] == order_id), None)
+        return next((order for order in self._adapter.orders() if order["order_id"] == order_id), None)
 
     @staticmethod
     def _refund_result(order_id: str, eligible: bool, reason: str) -> dict[str, Any]:
         return {"status": "ok", "order_id": order_id, "eligible": eligible, "reason": reason}
 
 
-def build_customer_support_registry(data_path: str | Path = "data/mock_customer_support.json") -> ToolRegistry:
-    tools = CustomerSupportTools(data_path)
+def build_customer_support_registry(data_path: str | Path = CUSTOMER_SUPPORT_DATA_PATH) -> ToolRegistry:
+    return build_customer_support_registry_from_adapter(JsonCustomerSupportAdapter(data_path))
+
+
+def build_customer_support_registry_from_adapter(adapter: CustomerSupportAdapter) -> ToolRegistry:
+    module = RefundPolicyModule(adapter)
     registry = ToolRegistry()
 
     registry.register(
@@ -106,7 +153,7 @@ def build_customer_support_registry(data_path: str | Path = "data/mock_customer_
                 "required": ["query"],
                 "additionalProperties": False,
             },
-            function=tools.find_customer,
+            function=module.find_customer,
         )
     )
     registry.register(
@@ -119,7 +166,7 @@ def build_customer_support_registry(data_path: str | Path = "data/mock_customer_
                 "required": ["customer_id"],
                 "additionalProperties": False,
             },
-            function=tools.get_customer_orders,
+            function=module.get_customer_orders,
         )
     )
     registry.register(
@@ -132,7 +179,7 @@ def build_customer_support_registry(data_path: str | Path = "data/mock_customer_
                 "required": ["order_id"],
                 "additionalProperties": False,
             },
-            function=tools.get_order,
+            function=module.get_order,
         )
     )
     registry.register(
@@ -145,7 +192,7 @@ def build_customer_support_registry(data_path: str | Path = "data/mock_customer_
                 "required": ["order_id"],
                 "additionalProperties": False,
             },
-            function=tools.check_refund_eligibility,
+            function=module.check_refund_eligibility,
         )
     )
     return registry

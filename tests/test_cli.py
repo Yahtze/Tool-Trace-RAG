@@ -73,3 +73,31 @@ def test_run_task_help_documents_trace_flags():
 
     assert "--save-trace" in result.stdout
     assert "--trace-dir" in result.stdout
+
+
+def test_index_traces_help_documents_vector_flags():
+    result = subprocess.run(
+        [sys.executable, "scripts/index_traces.py", "--help"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert "--trace-dir" in result.stdout
+    assert "--vector-dir" in result.stdout
+    assert "--collection" in result.stdout
+    assert "--reindex" in result.stdout
+
+
+def test_query_traces_help_documents_query_flags():
+    result = subprocess.run(
+        [sys.executable, "scripts/query_traces.py", "--help"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert "task" in result.stdout
+    assert "--top-k" in result.stdout
+    assert "--vector-dir" in result.stdout
+    assert "--collection" in result.stdout

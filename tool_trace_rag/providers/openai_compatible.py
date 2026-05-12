@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.error
 import urllib.request
-from pathlib import Path
 from typing import Any
 
+from tool_trace_rag.config import AGENT_API_KEY, AGENT_BASE_URL, AGENT_MODEL, AGENT_TIMEOUT_SECONDS
 from tool_trace_rag.providers.base import AssistantMessage, ToolCall
 
 
 class OpenAICompatibleProvider:
     provider_name = "openai-compatible"
 
-    def __init__(self, base_url: str, api_key: str, model: str, timeout_seconds: float = 60.0) -> None:
+    def __init__(self, base_url: str, api_key: str, model: str, timeout_seconds: float = AGENT_TIMEOUT_SECONDS) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
@@ -21,10 +20,9 @@ class OpenAICompatibleProvider:
 
     @classmethod
     def from_env(cls) -> "OpenAICompatibleProvider":
-        _load_dotenv_file(".env")
-        base_url = os.environ.get("AGENT_BASE_URL", "https://api.openai.com/v1")
-        api_key = os.environ.get("AGENT_API_KEY")
-        model = os.environ.get("AGENT_MODEL")
+        base_url = AGENT_BASE_URL
+        api_key = AGENT_API_KEY
+        model = AGENT_MODEL
         if not api_key:
             raise RuntimeError("AGENT_API_KEY is required.")
         if not model:
@@ -76,20 +74,3 @@ class OpenAICompatibleProvider:
             tool_calls.append(ToolCall(id=call_id, name=function["name"], arguments=arguments))
         return AssistantMessage(content=message.get("content"), tool_calls=tool_calls)
 
-
-def _load_dotenv_file(path: str) -> None:
-    env_path = Path(path)
-    if not env_path.exists():
-        return
-
-    for line in env_path.read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or "=" not in stripped:
-            continue
-        key, value = stripped.split("=", 1)
-        key = key.strip()
-        value = value.strip()
-        if not key:
-            continue
-        # Do not override environment variables already set by the shell.
-        os.environ.setdefault(key, value)
