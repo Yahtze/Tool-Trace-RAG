@@ -7,6 +7,7 @@ from typing import Protocol
 from tool_trace_rag.agent import ToolCallingAgent
 from tool_trace_rag.eval.schema import EvalMetrics, EvalReport, EvalTask, ExpectedToolCall, TaskScore
 from tool_trace_rag.traces.schema import AgentRunTrace, ToolCallTrace
+from tool_trace_rag.traces.store import TraceStore
 
 
 class AgentFactory(Protocol):
@@ -51,12 +52,15 @@ def evaluate_tasks(
     tasks: list[EvalTask],
     agent_factory: Callable[[int], ToolCallingAgent],
     default_max_tool_calls: int = 8,
+    trace_store: TraceStore | None = None,
 ) -> EvalReport:
     scores: list[TaskScore] = []
     for task in tasks:
         max_tool_calls = task.max_tool_calls if task.max_tool_calls is not None else default_max_tool_calls
         agent = agent_factory(max_tool_calls)
         trace = agent.run(task.prompt, task_id=task.task_id)
+        if trace_store is not None:
+            trace_store.write_trace(trace)
         scores.append(score_trace(task, trace))
     return EvalReport(scores=scores, metrics=summarize_scores(scores))
 

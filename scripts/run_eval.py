@@ -15,6 +15,7 @@ from tool_trace_rag.eval.formatting import format_eval_report
 from tool_trace_rag.eval.schema import EvalReport, TaskScore
 from tool_trace_rag.providers.openai_compatible import OpenAICompatibleProvider
 from tool_trace_rag.tools.customer_support import build_customer_support_registry
+from tool_trace_rag.traces.store import DEFAULT_TRACE_DIR, TraceStore
 
 
 def main() -> None:
@@ -23,7 +24,12 @@ def main() -> None:
     parser.add_argument("--data", default="data/mock_customer_support.json", help="Path to mock customer support data.")
     parser.add_argument("--max-tool-calls", type=int, default=8, help="Default maximum tool calls before aborting.")
     parser.add_argument("--verbose", action="store_true", help="Print per-task progress and elapsed time.")
+    parser.add_argument("--save-traces", action="store_true", help="Write one JSON trace per evaluated task.")
+    parser.add_argument("--trace-dir", default=None, help="Directory for persisted traces. Implies --save-traces.")
     args = parser.parse_args()
+
+    trace_store = TraceStore(args.trace_dir or DEFAULT_TRACE_DIR) if args.save_traces or args.trace_dir else None
+    traces_written = 0
 
     tasks = load_eval_tasks(args.tasks)
 
@@ -40,14 +46,26 @@ def main() -> None:
             started = time.perf_counter()
             agent = agent_factory(max_tool_calls)
             trace = agent.run(task.prompt, task_id=task.task_id)
+            if trace_store is not None:
+                trace_store.write_trace(trace)
+                traces_written += 1
             elapsed = time.perf_counter() - started
             scores.append(score_trace(task, trace))
             print(f"[{index}/{total}] {task.task_id} completed in {elapsed:.2f}s")
         report = EvalReport(scores=scores, metrics=summarize_scores(scores))
     else:
-        report = evaluate_tasks(tasks, agent_factory=agent_factory, default_max_tool_calls=args.max_tool_calls)
+        report = evaluate_tasks(
+            tasks,
+            agent_factory=agent_factory,
+            default_max_tool_calls=args.max_tool_calls,
+            trace_store=trace_store,
+        )
+        traces_written = len(report.scores) if trace_store is not None else 0
 
     print(format_eval_report(report))
+    if trace_store is not None:
+        print(f"Traces written: {traces_written}")
+        print(f"Trace directory: {trace_store.root}")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from tool_trace_rag.eval.evaluator import evaluate_tasks, score_trace, summarize_scores
 from tool_trace_rag.eval.schema import EvalTask, ExpectedToolCall, TaskExpectations
 from tool_trace_rag.traces.schema import AgentRunTrace, ToolCallTrace
+from tool_trace_rag.traces.store import TraceStore
 
 
 def make_task(
@@ -175,3 +176,20 @@ def test_evaluate_tasks_uses_task_specific_max_tool_call_override():
     assert created_max_values == [2]
     assert report.metrics.total_tasks == 1
     assert report.scores[0].trace.task_id == "m2_test"
+
+
+def test_evaluate_tasks_can_persist_traces_without_changing_scores(tmp_path):
+    task = make_task(requires_tools=False, answer_contains=["30 days"])
+    trace = make_trace(tool_calls=[], final_answer="The return window is 30 days.")
+    store = TraceStore(tmp_path)
+
+    def factory(max_tool_calls: int):
+        return StubAgent([trace])
+
+    report = evaluate_tasks([task], factory, default_max_tool_calls=8, trace_store=store)
+
+    assert report.metrics.total_tasks == 1
+    assert report.metrics.passed_tasks == 1
+    persisted = store.list_traces()
+    assert len(persisted) == 1
+    assert persisted[0].to_dict() == trace.to_dict()
