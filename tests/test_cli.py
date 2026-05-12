@@ -1,3 +1,6 @@
+import subprocess
+import sys
+
 from tool_trace_rag.cli import format_trace_summary
 from tool_trace_rag.traces.schema import AgentRunTrace, ToolCallTrace
 
@@ -46,3 +49,27 @@ def test_format_trace_summary_handles_no_tool_calls():
 
     assert "Final answer:\n30 days." in output
     assert "Tool calls: 0" in output
+
+
+def test_run_eval_help_documents_trace_flags():
+    result = subprocess.run(
+        [sys.executable, "scripts/run_eval.py", "--help"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert "--save-traces" in result.stdout
+    assert "--trace-dir" in result.stdout
+
+
+def test_run_task_help_documents_trace_flags():
+    result = subprocess.run(
+        [sys.executable, "scripts/run_task.py", "--help"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert "--save-trace" in result.stdout
+    assert "--trace-dir" in result.stdout

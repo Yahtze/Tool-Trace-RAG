@@ -11,6 +11,7 @@ from tool_trace_rag.agent import ToolCallingAgent
 from tool_trace_rag.cli import format_trace_summary
 from tool_trace_rag.providers.openai_compatible import OpenAICompatibleProvider
 from tool_trace_rag.tools.customer_support import build_customer_support_registry
+from tool_trace_rag.traces.store import DEFAULT_TRACE_DIR, TraceStore
 
 
 def main() -> None:
@@ -18,6 +19,8 @@ def main() -> None:
     parser.add_argument("task", help="Task for the agent to perform.")
     parser.add_argument("--data", default="data/mock_customer_support.json", help="Path to mock customer support data.")
     parser.add_argument("--max-tool-calls", type=int, default=8, help="Maximum tool calls before aborting.")
+    parser.add_argument("--save-trace", action="store_true", help="Write the completed run trace as JSON.")
+    parser.add_argument("--trace-dir", default=None, help="Directory for persisted trace. Implies --save-trace.")
     args = parser.parse_args()
 
     provider = OpenAICompatibleProvider.from_env()
@@ -25,6 +28,11 @@ def main() -> None:
     agent = ToolCallingAgent(provider=provider, tools=tools, max_tool_calls=args.max_tool_calls)
     trace = agent.run(args.task)
     print(format_trace_summary(trace))
+
+    if args.save_trace or args.trace_dir:
+        store = TraceStore(args.trace_dir or DEFAULT_TRACE_DIR)
+        path = store.write_trace(trace)
+        print(f"Trace written: {path}")
 
 
 if __name__ == "__main__":
