@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from tool_trace_rag.config import CUSTOMER_SUPPORT_DATA_PATH
 from tool_trace_rag.tools.registry import ToolDefinition, ToolRegistry
 
 
@@ -92,7 +93,7 @@ class CustomerSupportTools:
         return {"status": "ok", "order_id": order_id, "eligible": eligible, "reason": reason}
 
 
-def build_customer_support_registry(data_path: str | Path = "data/mock_customer_support.json") -> ToolRegistry:
+def build_customer_support_registry(data_path: str | Path = CUSTOMER_SUPPORT_DATA_PATH) -> ToolRegistry:
     tools = CustomerSupportTools(data_path)
     registry = ToolRegistry()
 

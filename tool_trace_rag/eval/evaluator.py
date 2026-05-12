@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Protocol
 
 from tool_trace_rag.agent import ToolCallingAgent
+from tool_trace_rag.config import AGENT_MAX_TOOL_CALLS
 from tool_trace_rag.eval.schema import EvalMetrics, EvalReport, EvalTask, ExpectedToolCall, TaskScore
 from tool_trace_rag.traces.schema import AgentRunTrace, ToolCallTrace
 from tool_trace_rag.traces.store import TraceStore
@@ -51,7 +52,7 @@ def score_trace(task: EvalTask, trace: AgentRunTrace) -> TaskScore:
 def evaluate_tasks(
     tasks: list[EvalTask],
     agent_factory: Callable[[int], ToolCallingAgent],
-    default_max_tool_calls: int = 8,
+    default_max_tool_calls: int = AGENT_MAX_TOOL_CALLS,
     trace_store: TraceStore | None = None,
 ) -> EvalReport:
     scores: list[TaskScore] = []

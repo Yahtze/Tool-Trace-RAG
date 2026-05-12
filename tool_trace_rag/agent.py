@@ -4,6 +4,7 @@ import json
 import time
 from typing import Any
 
+from tool_trace_rag.config import AGENT_MAX_TOOL_CALLS
 from tool_trace_rag.providers.base import ChatProvider, ToolCall
 from tool_trace_rag.tools.registry import ToolRegistry
 from tool_trace_rag.traces.schema import AgentRunTrace, ToolCallTrace
@@ -19,7 +20,7 @@ class ToolCallingAgent:
         provider: ChatProvider,
         tools: ToolRegistry,
         system_prompt: str = DEFAULT_SYSTEM_PROMPT,
-        max_tool_calls: int = 8,
+        max_tool_calls: int = AGENT_MAX_TOOL_CALLS,
     ) -> None:
         self.provider = provider
         self.tools = tools
