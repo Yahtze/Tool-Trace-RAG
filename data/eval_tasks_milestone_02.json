@@ -1,0 +1,326 @@
+[
+  {
+    "task_id": "m2_001",
+    "prompt": "Can Maya Chen return her headphones order ord_1001?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1001"}}],
+      "answer_contains": ["ord_1001"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "eligible"]
+  },
+  {
+    "task_id": "m2_002",
+    "prompt": "Is Jordan Patel's wireless mouse order ord_1005 refundable?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1005"}}],
+      "answer_contains": ["ord_1005"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible"]
+  },
+  {
+    "task_id": "m2_003",
+    "prompt": "Look up the recent orders for Maya Chen.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [
+        {"tool_name": "find_customer", "arguments": {"query": "Maya Chen"}},
+        {"tool_name": "get_customer_orders", "arguments": {"customer_id": "cust_001"}}
+      ],
+      "answer_contains": ["ord_1001"]
+    },
+    "max_tool_calls": 5,
+    "tags": ["lookup", "recent_orders"]
+  },
+  {
+    "task_id": "m2_004",
+    "prompt": "Find the order details for ord_1008.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "get_order", "arguments": {"order_id": "ord_1008"}}],
+      "answer_contains": ["ord_1008"]
+    },
+    "max_tool_calls": 3,
+    "tags": ["lookup", "order_detail"]
+  },
+  {
+    "task_id": "m2_005",
+    "prompt": "Can Sofia Garcia get a refund for her clearance vase order ord_1009?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1009"}}],
+      "answer_contains": ["ord_1009"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible"]
+  },
+  {
+    "task_id": "m2_006",
+    "prompt": "Check refund eligibility for Riley Brooks' processing winter coat order ord_1006.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1006"}}],
+      "answer_contains": ["ord_1006"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible", "edge_case"]
+  },
+  {
+    "task_id": "m2_007",
+    "prompt": "Tell me whether order ord_1015 is refundable.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1015"}}],
+      "answer_contains": ["ord_1015"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "eligible", "edge_case"]
+  },
+  {
+    "task_id": "m2_008",
+    "prompt": "Can Olivia Martinez return her bookshelf order ord_1020?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1020"}}],
+      "answer_contains": ["ord_1020"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "eligible", "edge_case"]
+  },
+  {
+    "task_id": "m2_009",
+    "prompt": "Is Olivia Martinez's opened earbuds order ord_1021 refundable?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1021"}}],
+      "answer_contains": ["ord_1021"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible"]
+  },
+  {
+    "task_id": "m2_010",
+    "prompt": "What orders does ava@example.com have?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [
+        {"tool_name": "find_customer", "arguments": {"query": "ava@example.com"}},
+        {"tool_name": "get_customer_orders", "arguments": {"customer_id": "cust_006"}}
+      ],
+      "answer_contains": ["ord_1012"]
+    },
+    "max_tool_calls": 5,
+    "tags": ["lookup", "recent_orders"]
+  },
+  {
+    "task_id": "m2_011",
+    "prompt": "Look up customer zara@example.com.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "find_customer", "arguments": {"query": "zara@example.com"}}],
+      "answer_contains": ["zara@example.com"]
+    },
+    "max_tool_calls": 3,
+    "tags": ["lookup", "missing_customer", "edge_case"]
+  },
+  {
+    "task_id": "m2_012",
+    "prompt": "Find order ord_9999 and summarize it.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "get_order", "arguments": {"order_id": "ord_9999"}}],
+      "answer_contains": ["ord_9999"]
+    },
+    "max_tool_calls": 3,
+    "tags": ["lookup", "missing_order", "edge_case"]
+  },
+  {
+    "task_id": "m2_013",
+    "prompt": "Can Isabella Taylor return the air purifier from ord_1024?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1024"}}],
+      "answer_contains": ["ord_1024"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible"]
+  },
+  {
+    "task_id": "m2_014",
+    "prompt": "Check whether Ethan Lee's hoodie order ord_1023 can be refunded.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1023"}}],
+      "answer_contains": ["ord_1023"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "eligible"]
+  },
+  {
+    "task_id": "m2_015",
+    "prompt": "Show recent orders for Liam Brown.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [
+        {"tool_name": "find_customer", "arguments": {"query": "Liam Brown"}},
+        {"tool_name": "get_customer_orders", "arguments": {"customer_id": "cust_007"}}
+      ],
+      "answer_contains": ["ord_1014"]
+    },
+    "max_tool_calls": 5,
+    "tags": ["lookup", "recent_orders"]
+  },
+  {
+    "task_id": "m2_016",
+    "prompt": "Need details for ord_1017.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "get_order", "arguments": {"order_id": "ord_1017"}}],
+      "answer_contains": ["ord_1017"]
+    },
+    "max_tool_calls": 3,
+    "tags": ["lookup", "order_detail", "ambiguous"]
+  },
+  {
+    "task_id": "m2_017",
+    "prompt": "Refund? ord_1019",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1019"}}],
+      "answer_contains": ["ord_1019"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible", "ambiguous", "edge_case"]
+  },
+  {
+    "task_id": "m2_018",
+    "prompt": "Can Noah Smith get money back for cancelled backpack order ord_1010?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1010"}}],
+      "answer_contains": ["ord_1010"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible", "edge_case"]
+  },
+  {
+    "task_id": "m2_019",
+    "prompt": "What has Mason Wilson ordered recently?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [
+        {"tool_name": "find_customer", "arguments": {"query": "Mason Wilson"}},
+        {"tool_name": "get_customer_orders", "arguments": {"customer_id": "cust_009"}}
+      ],
+      "answer_contains": ["ord_1018"]
+    },
+    "max_tool_calls": 5,
+    "tags": ["lookup", "recent_orders"]
+  },
+  {
+    "task_id": "m2_020",
+    "prompt": "Check refund eligibility for smart speaker order ord_1025.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1025"}}],
+      "answer_contains": ["ord_1025"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "eligible"]
+  },
+  {
+    "task_id": "m2_021",
+    "prompt": "Look up order ord_1011 for Noah Smith.",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "get_order", "arguments": {"order_id": "ord_1011"}}],
+      "answer_contains": ["ord_1011"]
+    },
+    "max_tool_calls": 3,
+    "tags": ["lookup", "order_detail"]
+  },
+  {
+    "task_id": "m2_022",
+    "prompt": "Can Riley Brooks return the throw blanket order ord_1007?",
+    "requires_tools": true,
+    "expected": {
+      "tool_calls": [{"tool_name": "check_refund_eligibility", "arguments": {"order_id": "ord_1007"}}],
+      "answer_contains": ["ord_1007"]
+    },
+    "max_tool_calls": 4,
+    "tags": ["refund", "ineligible", "edge_case"]
+  },
+  {
+    "task_id": "m2_023",
+    "prompt": "What is the standard refund window?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["30"]},
+    "tags": ["no_tool", "policy"]
+  },
+  {
+    "task_id": "m2_024",
+    "prompt": "Are opened electronics refundable under the general policy?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["opened"]},
+    "tags": ["no_tool", "policy"]
+  },
+  {
+    "task_id": "m2_025",
+    "prompt": "Can final sale clearance items be refunded?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["final sale"]},
+    "tags": ["no_tool", "policy"]
+  },
+  {
+    "task_id": "m2_026",
+    "prompt": "If an order has not been delivered yet, is it eligible for refund?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["not"]},
+    "tags": ["no_tool", "policy"]
+  },
+  {
+    "task_id": "m2_027",
+    "prompt": "What categories are generally returnable within 30 days if unopened?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["accessories"]},
+    "tags": ["no_tool", "policy"]
+  },
+  {
+    "task_id": "m2_028",
+    "prompt": "Explain the refund policy in one sentence.",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["30"]},
+    "tags": ["no_tool", "policy", "ambiguous"]
+  },
+  {
+    "task_id": "m2_029",
+    "prompt": "Do you need to look up a customer to answer general refund-window questions?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["no"]},
+    "tags": ["no_tool", "policy"]
+  },
+  {
+    "task_id": "m2_030",
+    "prompt": "Can a delivered unopened accessory be returnable if it is inside the window?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["yes"]},
+    "tags": ["no_tool", "policy"]
+  },
+  {
+    "task_id": "m2_031",
+    "prompt": "What should happen with refund requests for shipped but undelivered orders?",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["not"]},
+    "tags": ["no_tool", "policy", "edge_case"]
+  },
+  {
+    "task_id": "m2_032",
+    "prompt": "Give me the policy for clearance returns.",
+    "requires_tools": false,
+    "expected": {"answer_contains": ["clearance"]},
+    "tags": ["no_tool", "policy"]
+  }
+]
