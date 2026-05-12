@@ -7,12 +7,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tool_trace_rag.agent import ToolCallingAgent
+from tool_trace_rag.bootstrap import RuntimeBootstrap
 from tool_trace_rag.config import AGENT_MAX_TOOL_CALLS, CUSTOMER_SUPPORT_DATA_PATH
 from tool_trace_rag.cli import format_trace_summary
-from tool_trace_rag.providers.openai_compatible import OpenAICompatibleProvider
-from tool_trace_rag.tools.customer_support import build_customer_support_registry
-from tool_trace_rag.traces.store import DEFAULT_TRACE_DIR, TraceStore
+from tool_trace_rag.traces.store import DEFAULT_TRACE_DIR
 
 
 def main() -> None:
@@ -24,14 +22,13 @@ def main() -> None:
     parser.add_argument("--trace-dir", default=None, help="Directory for persisted trace. Implies --save-trace.")
     args = parser.parse_args()
 
-    provider = OpenAICompatibleProvider.from_env()
-    tools = build_customer_support_registry(args.data)
-    agent = ToolCallingAgent(provider=provider, tools=tools, max_tool_calls=args.max_tool_calls)
+    bootstrap = RuntimeBootstrap()
+    agent = bootstrap.build_agent(data_path=args.data, max_tool_calls=args.max_tool_calls)
     trace = agent.run(args.task)
     print(format_trace_summary(trace))
 
     if args.save_trace or args.trace_dir:
-        store = TraceStore(args.trace_dir or DEFAULT_TRACE_DIR)
+        store = bootstrap.build_trace_store(args.trace_dir or DEFAULT_TRACE_DIR)
         path = store.write_trace(trace)
         print(f"Trace written: {path}")
 

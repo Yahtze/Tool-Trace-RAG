@@ -7,8 +7,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from tool_trace_rag.bootstrap import RuntimeBootstrap
 from tool_trace_rag.config import QUERY_TOP_K
-from tool_trace_rag.memory.vector_store import DEFAULT_COLLECTION_NAME, DEFAULT_VECTOR_DIR, TraceVectorStore
+from tool_trace_rag.memory.vector_store import DEFAULT_COLLECTION_NAME, DEFAULT_VECTOR_DIR
 
 
 def main() -> None:
@@ -19,7 +20,8 @@ def main() -> None:
     parser.add_argument("--collection", default=DEFAULT_COLLECTION_NAME, help="Chroma collection name.")
     args = parser.parse_args()
 
-    store = TraceVectorStore(vector_dir=args.vector_dir, collection_name=args.collection)
+    bootstrap = RuntimeBootstrap()
+    store = bootstrap.build_vector_store(vector_dir=args.vector_dir, collection_name=args.collection)
     results = store.query(args.task, top_k=args.top_k)
     if not results:
         print("No trace results found.")

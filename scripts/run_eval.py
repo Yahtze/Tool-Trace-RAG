@@ -8,15 +8,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tool_trace_rag.agent import ToolCallingAgent
+from tool_trace_rag.bootstrap import RuntimeBootstrap
 from tool_trace_rag.config import AGENT_MAX_TOOL_CALLS, CUSTOMER_SUPPORT_DATA_PATH, EVAL_TASKS_PATH
 from tool_trace_rag.eval.dataset import load_eval_tasks
 from tool_trace_rag.eval.evaluator import evaluate_tasks, score_trace, summarize_scores
 from tool_trace_rag.eval.formatting import format_eval_report
 from tool_trace_rag.eval.schema import EvalReport, TaskScore
-from tool_trace_rag.providers.openai_compatible import OpenAICompatibleProvider
-from tool_trace_rag.tools.customer_support import build_customer_support_registry
-from tool_trace_rag.traces.store import DEFAULT_TRACE_DIR, TraceStore
+from tool_trace_rag.traces.store import DEFAULT_TRACE_DIR
 
 
 def main() -> None:
@@ -29,15 +27,12 @@ def main() -> None:
     parser.add_argument("--trace-dir", default=None, help="Directory for persisted traces. Implies --save-traces.")
     args = parser.parse_args()
 
-    trace_store = TraceStore(args.trace_dir or DEFAULT_TRACE_DIR) if args.save_traces or args.trace_dir else None
+    bootstrap = RuntimeBootstrap()
+    trace_store = bootstrap.build_trace_store(args.trace_dir or DEFAULT_TRACE_DIR) if args.save_traces or args.trace_dir else None
     traces_written = 0
 
     tasks = load_eval_tasks(args.tasks)
-
-    def agent_factory(max_tool_calls: int) -> ToolCallingAgent:
-        provider = OpenAICompatibleProvider.from_env()
-        tools = build_customer_support_registry(args.data)
-        return ToolCallingAgent(provider=provider, tools=tools, max_tool_calls=max_tool_calls)
+    agent_factory = bootstrap.build_eval_agent_factory(data_path=args.data)
 
     if args.verbose:
         scores: list[TaskScore] = []

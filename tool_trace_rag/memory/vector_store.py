@@ -1,26 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import chromadb
 
 from tool_trace_rag.config import QUERY_TOP_K, VECTOR_COLLECTION_NAME, VECTOR_DIR
-from tool_trace_rag.memory.documents import format_trace_document
 from tool_trace_rag.memory.embeddings import EmbeddingProvider, SentenceTransformerEmbeddingProvider
-from tool_trace_rag.traces.store import TraceStore
+from tool_trace_rag.memory.ingestion import FileSystemTraceSource, IndexSummary, TraceIngestionModule
 
 DEFAULT_VECTOR_DIR = VECTOR_DIR
 DEFAULT_COLLECTION_NAME = VECTOR_COLLECTION_NAME
-
-
-@dataclass(frozen=True, slots=True)
-class IndexSummary:
-    indexed_traces: int = 0
-    skipped_duplicates: int = 0
-    failed_traces: int = 0
-    errors: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +21,23 @@ class QueryResult:
     score: float
     text: str
     metadata: dict[str, Any]
+
+
+class _ChromaVectorDocumentSink:
+    def __init__(self, collection: Any) -> None:
+        self._collection = collection
+
+    def has_id(self, document_id: str) -> bool:
+        existing = self._collection.get(ids=[document_id], include=[])
+        return bool(existing.get("ids"))
+
+    def upsert(self, document_id: str, text: str, metadata: dict[str, Any], embedding: list[float]) -> None:
+        self._collection.upsert(
+            ids=[document_id],
+            documents=[text],
+            metadatas=[metadata],
+            embeddings=[embedding],
+        )
 
 
 class TraceVectorStore:
@@ -45,6 +53,7 @@ class TraceVectorStore:
         self.vector_dir.mkdir(parents=True, exist_ok=True)
         self._client = chromadb.PersistentClient(path=str(self.vector_dir))
         self._collection = self._client.get_or_create_collection(name=collection_name)
+        self._ingestion = TraceIngestionModule(embedding_provider=self.embedding_provider)
 
     def count(self) -> int:
         return int(self._collection.count())
@@ -54,34 +63,9 @@ class TraceVectorStore:
         self._collection = self._client.get_or_create_collection(name=self.collection_name)
 
     def index_directory(self, trace_dir: str | Path, reindex: bool = False) -> IndexSummary:
-        root = Path(trace_dir)
-        if not root.exists():
-            return IndexSummary()
-        indexed = 0
-        skipped = 0
-        failed = 0
-        errors: list[str] = []
-        trace_store = TraceStore(root)
-        for path in sorted(root.glob("*.json")):
-            try:
-                relative = path.relative_to(root).as_posix()
-                trace = trace_store.read_trace(path)
-                document = format_trace_document(trace, source_path=path, relative_source_path=relative)
-                if not reindex and self._has_id(document.document_id):
-                    skipped += 1
-                    continue
-                embedding = self.embedding_provider.embed_documents([document.text])[0]
-                self._collection.upsert(
-                    ids=[document.document_id],
-                    documents=[document.text],
-                    metadatas=[document.metadata],
-                    embeddings=[embedding],
-                )
-                indexed += 1
-            except Exception as exc:
-                failed += 1
-                errors.append(f"{path.name}: {exc}")
-        return IndexSummary(indexed_traces=indexed, skipped_duplicates=skipped, failed_traces=failed, errors=errors)
+        source = FileSystemTraceSource(trace_dir)
+        sink = _ChromaVectorDocumentSink(self._collection)
+        return self._ingestion.index(source=source, sink=sink, reindex=reindex)
 
     def query(self, task: str, top_k: int = QUERY_TOP_K) -> list[QueryResult]:
         if top_k < 1:
@@ -105,7 +89,3 @@ class TraceVectorStore:
                 )
             )
         return results
-
-    def _has_id(self, document_id: str) -> bool:
-        existing = self._collection.get(ids=[document_id], include=[])
-        return bool(existing.get("ids"))

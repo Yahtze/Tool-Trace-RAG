@@ -7,7 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tool_trace_rag.memory.vector_store import DEFAULT_COLLECTION_NAME, DEFAULT_VECTOR_DIR, TraceVectorStore
+from tool_trace_rag.bootstrap import RuntimeBootstrap
+from tool_trace_rag.memory.vector_store import DEFAULT_COLLECTION_NAME, DEFAULT_VECTOR_DIR
 from tool_trace_rag.traces.store import DEFAULT_TRACE_DIR
 
 
@@ -20,7 +21,8 @@ def main() -> None:
     parser.add_argument("--clear", action="store_true", help="Clear the collection before indexing.")
     args = parser.parse_args()
 
-    store = TraceVectorStore(vector_dir=args.vector_dir, collection_name=args.collection)
+    bootstrap = RuntimeBootstrap()
+    store = bootstrap.build_vector_store(vector_dir=args.vector_dir, collection_name=args.collection)
     if args.clear:
         store.clear()
     summary = store.index_directory(args.trace_dir, reindex=args.reindex)
