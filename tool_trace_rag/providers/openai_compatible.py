@@ -4,6 +4,7 @@ import json
 import os
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Any
 
 from tool_trace_rag.providers.base import AssistantMessage, ToolCall
@@ -20,6 +21,7 @@ class OpenAICompatibleProvider:
 
     @classmethod
     def from_env(cls) -> "OpenAICompatibleProvider":
+        _load_dotenv_file(".env")
         base_url = os.environ.get("AGENT_BASE_URL", "https://api.openai.com/v1")
         api_key = os.environ.get("AGENT_API_KEY")
         model = os.environ.get("AGENT_MODEL")
@@ -73,3 +75,21 @@ class OpenAICompatibleProvider:
                 raise ValueError(f"Tool call '{call_id}' arguments are not valid JSON.") from exc
             tool_calls.append(ToolCall(id=call_id, name=function["name"], arguments=arguments))
         return AssistantMessage(content=message.get("content"), tool_calls=tool_calls)
+
+
+def _load_dotenv_file(path: str) -> None:
+    env_path = Path(path)
+    if not env_path.exists():
+        return
+
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+        # Do not override environment variables already set by the shell.
+        os.environ.setdefault(key, value)

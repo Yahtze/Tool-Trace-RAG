@@ -1,3 +1,4 @@
 implementation-milestones/
 .codex
 .env
+__pycache__/
