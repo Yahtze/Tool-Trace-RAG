@@ -4,6 +4,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 from tool_trace_rag.agent import ToolCallingAgent
+from tool_trace_rag.config import MEMORY_SNIPPET_MAX_CHARS
+from tool_trace_rag.memory import MemoryPromptContext, MemoryRetrievalConfig, MemoryRetriever, format_memory_prompt_section
 from tool_trace_rag.memory.vector_store import (
     DEFAULT_COLLECTION_NAME,
     DEFAULT_VECTOR_DIR,
@@ -18,16 +20,46 @@ class RuntimeBootstrap:
     def __init__(self, provider_factory: Callable[[], object] | None = None) -> None:
         self._provider_factory = provider_factory or OpenAICompatibleProvider.from_env
 
-    def build_agent(self, data_path: str, max_tool_calls: int) -> ToolCallingAgent:
+    def build_agent(
+        self,
+        data_path: str,
+        max_tool_calls: int,
+        memory_context: MemoryPromptContext | None = None,
+    ) -> ToolCallingAgent:
         provider = self._provider_factory()
         tools = build_customer_support_registry(data_path)
-        return ToolCallingAgent(provider=provider, tools=tools, max_tool_calls=max_tool_calls)
+        return ToolCallingAgent(
+            provider=provider,
+            tools=tools,
+            max_tool_calls=max_tool_calls,
+            memory_context=memory_context,
+        )
 
     def build_eval_agent_factory(self, data_path: str) -> Callable[[int], ToolCallingAgent]:
         def _factory(max_tool_calls: int) -> ToolCallingAgent:
             return self.build_agent(data_path=data_path, max_tool_calls=max_tool_calls)
 
         return _factory
+
+    def build_memory_context(
+        self,
+        task: str,
+        trace_dir: str | Path,
+        vector_dir: str | Path,
+        collection_name: str,
+        top_k: int,
+        memory_filter: str,
+        strict: bool,
+    ) -> MemoryPromptContext:
+        vector_store = self.build_vector_store(vector_dir=vector_dir, collection_name=collection_name)
+        result = MemoryRetriever(vector_store=vector_store, trace_dir=trace_dir).retrieve(
+            task,
+            MemoryRetrievalConfig(top_k=top_k, filter=memory_filter, strict=strict),
+        )
+        return MemoryPromptContext(
+            prompt_section=format_memory_prompt_section(result.examples, max_chars_per_snippet=MEMORY_SNIPPET_MAX_CHARS),
+            metadata=result.metadata,
+        )
 
     def build_trace_store(self, trace_dir: str | Path = DEFAULT_TRACE_DIR) -> TraceStore:
         return TraceStore(trace_dir)

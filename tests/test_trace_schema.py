@@ -59,6 +59,37 @@ def test_agent_run_trace_defaults_persistence_metadata():
     assert data["created_at"].endswith("+00:00")
 
 
+def test_agent_run_trace_round_trips_retrieval_metadata():
+    trace = AgentRunTrace(
+        trace_id="trace-current",
+        created_at="2026-05-12T00:00:00+00:00",
+        task_id="m5_current",
+        task="Current task",
+        messages=[{"role": "user", "content": "Current task"}],
+        tool_calls=[],
+        final_answer="Done",
+        success=True,
+        provider="fake",
+        model="fake-model",
+        retrieval={
+            "enabled": True,
+            "top_k": 3,
+            "filter": "successful_only",
+            "retrieved_count": 1,
+            "injected_count": 1,
+            "memories": [
+                {"rank": 1, "trace_id": "trace-old", "task_id": "old-task", "score": 0.25, "source_path": "old.json"}
+            ],
+            "error": None,
+        },
+    )
+
+    loaded = AgentRunTrace.from_dict(trace.to_dict())
+
+    assert loaded.retrieval == trace.retrieval
+    assert loaded.to_dict()["retrieval"]["memories"][0]["trace_id"] == "trace-old"
+
+
 def test_agent_run_trace_from_dict_preserves_tool_call_order_and_metadata():
     data = {
         "schema_version": TRACE_SCHEMA_VERSION,
@@ -83,4 +114,4 @@ def test_agent_run_trace_from_dict_preserves_tool_call_order_and_metadata():
     assert trace.trace_id == "trace-fixed"
     assert trace.created_at == "2026-05-12T00:00:00+00:00"
     assert [call.call_id for call in trace.tool_calls] == ["call_1", "call_2"]
-    assert trace.to_dict() == data
+    assert trace.to_dict() == {**data, "retrieval": None}
