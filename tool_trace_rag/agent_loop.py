@@ -17,16 +17,23 @@ class AgentLoop:
         system_prompt: str,
         policy_context: str,
         max_tool_calls: int,
+        memory_prompt_section: str = "",
+        retrieval_metadata: dict[str, Any] | None = None,
     ) -> None:
         self.provider = provider
         self.tools = tools
         self.system_prompt = system_prompt
         self.policy_context = policy_context
         self.max_tool_calls = max_tool_calls
+        self.memory_prompt_section = memory_prompt_section
+        self.retrieval_metadata = retrieval_metadata
 
     def run(self, task: str, task_id: str | None = None) -> AgentRunTrace:
+        system_parts = [self.system_prompt, self.policy_context]
+        if self.memory_prompt_section.strip():
+            system_parts.append(self.memory_prompt_section.strip())
         messages: list[dict[str, Any]] = [
-            {"role": "system", "content": f"{self.system_prompt}\n\n{self.policy_context}"},
+            {"role": "system", "content": "\n\n".join(system_parts)},
             {"role": "user", "content": task},
         ]
         trace_calls: list[ToolCallTrace] = []
@@ -49,6 +56,7 @@ class AgentLoop:
                     success=None,
                     provider=self.provider.provider_name,
                     model=self.provider.model,
+                    retrieval=self.retrieval_metadata,
                 )
 
             for tool_call in assistant.tool_calls:
@@ -63,6 +71,7 @@ class AgentLoop:
                         provider=self.provider.provider_name,
                         model=self.provider.model,
                         error="max_tool_calls_exceeded",
+                        retrieval=self.retrieval_metadata,
                     )
                 trace_call = execute_tool_call(self.tools, tool_call)
                 trace_calls.append(trace_call)

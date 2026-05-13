@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from tool_trace_rag.agent_loop import AgentLoop
 from tool_trace_rag.config import AGENT_MAX_TOOL_CALLS
+from tool_trace_rag.memory.injection import MemoryPromptContext
 from tool_trace_rag.providers.base import ChatProvider
 from tool_trace_rag.tools.registry import ToolRegistry
 from tool_trace_rag.traces.schema import AgentRunTrace
@@ -18,11 +19,13 @@ class ToolCallingAgent:
         tools: ToolRegistry,
         system_prompt: str = DEFAULT_SYSTEM_PROMPT,
         max_tool_calls: int = AGENT_MAX_TOOL_CALLS,
+        memory_context: MemoryPromptContext | None = None,
     ) -> None:
         self.provider = provider
         self.tools = tools
         self.system_prompt = system_prompt
         self.max_tool_calls = max_tool_calls
+        self.memory_context = memory_context
 
     def run(self, task: str, task_id: str | None = None) -> AgentRunTrace:
         loop = AgentLoop(
@@ -31,6 +34,8 @@ class ToolCallingAgent:
             system_prompt=self.system_prompt,
             policy_context=POLICY_CONTEXT,
             max_tool_calls=self.max_tool_calls,
+            memory_prompt_section=self.memory_context.prompt_section if self.memory_context else "",
+            retrieval_metadata=self.memory_context.metadata if self.memory_context else None,
         )
         return loop.run(task=task, task_id=task_id)
 

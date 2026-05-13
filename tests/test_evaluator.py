@@ -178,6 +178,16 @@ def test_evaluate_tasks_uses_task_specific_max_tool_call_override():
     assert report.scores[0].trace.task_id == "m2_test"
 
 
+def test_evaluate_tasks_default_traces_have_no_retrieval_metadata():
+    task = make_task(requires_tools=False, answer_contains=["30 days"])
+    trace = make_trace(tool_calls=[], final_answer="The return window is 30 days.")
+
+    report = evaluate_tasks([task], lambda max_tool_calls: StubAgent([trace]), default_max_tool_calls=8)
+
+    assert report.metrics.passed_tasks == 1
+    assert trace.retrieval is None
+
+
 def test_evaluate_tasks_can_persist_traces_without_changing_scores(tmp_path):
     task = make_task(requires_tools=False, answer_contains=["30 days"])
     trace = make_trace(tool_calls=[], final_answer="The return window is 30 days.")

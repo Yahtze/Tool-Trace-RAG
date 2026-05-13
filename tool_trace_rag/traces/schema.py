@@ -47,6 +47,7 @@ class AgentRunTrace:
     provider: str
     model: str
     error: str | None = None
+    retrieval: dict[str, Any] | None = None
     trace_id: str = field(default_factory=lambda: uuid4().hex)
     created_at: str = field(default_factory=utc_now_iso)
     schema_version: str = TRACE_SCHEMA_VERSION
@@ -68,6 +69,7 @@ class AgentRunTrace:
             provider=str(data["provider"]),
             model=str(data["model"]),
             error=data.get("error"),
+            retrieval=data.get("retrieval"),
             trace_id=str(data["trace_id"]),
             created_at=str(data["created_at"]),
             schema_version=str(data.get("schema_version", TRACE_SCHEMA_VERSION)),

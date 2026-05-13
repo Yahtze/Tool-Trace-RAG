@@ -75,6 +75,16 @@ def test_run_task_help_documents_trace_flags():
     assert "--trace-dir" in result.stdout
 
 
+def test_run_task_help_documents_memory_flags():
+    result = subprocess.run([sys.executable, "scripts/run_task.py", "--help"], check=True, capture_output=True, text=True)
+
+    assert "--use-memory" in result.stdout
+    assert "--vector-dir" in result.stdout
+    assert "--top-k" in result.stdout
+    assert "--memory-filter" in result.stdout
+    assert "--memory-strict" in result.stdout
+
+
 def test_index_traces_help_documents_vector_flags():
     result = subprocess.run(
         [sys.executable, "scripts/index_traces.py", "--help"],
@@ -87,6 +97,15 @@ def test_index_traces_help_documents_vector_flags():
     assert "--vector-dir" in result.stdout
     assert "--collection" in result.stdout
     assert "--reindex" in result.stdout
+
+
+def test_run_eval_help_documents_memory_flags():
+    result = subprocess.run([sys.executable, "scripts/run_eval.py", "--help"], check=True, capture_output=True, text=True)
+
+    assert "--use-memory" in result.stdout
+    assert "--vector-dir" in result.stdout
+    assert "--top-k" in result.stdout
+    assert "--memory-filter" in result.stdout
 
 
 def test_query_traces_help_documents_query_flags():
