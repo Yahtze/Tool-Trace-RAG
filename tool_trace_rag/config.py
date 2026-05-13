@@ -18,8 +18,9 @@ def _load_dotenv_file(path: str) -> None:
         value = value.strip()
         if not key:
             continue
-        # Do not override variables already set by the shell.
-        os.environ.setdefault(key, value)
+        # Prefer project-local .env values over ambient shell variables so local
+        # runs are reproducible from the checked-out project configuration.
+        os.environ[key] = value
 
 
 _load_dotenv_file(".env")
@@ -45,6 +46,18 @@ def _get_float(name: str, default: float) -> float:
         raise RuntimeError(f"{name} must be a number.") from exc
 
 
+def _get_bool(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None or value.strip() == "":
+        return default
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise RuntimeError(f"{name} must be a boolean.")
+
+
 AGENT_BASE_URL = os.environ.get("AGENT_BASE_URL", "https://api.openai.com/v1")
 AGENT_API_KEY = os.environ.get("AGENT_API_KEY")
 AGENT_MODEL = os.environ.get("AGENT_MODEL")
@@ -55,6 +68,12 @@ TRACE_DIR = Path(os.environ.get("TRACE_DIR", "runs/traces"))
 VECTOR_DIR = Path(os.environ.get("VECTOR_DIR", "runs/vector_store"))
 VECTOR_COLLECTION_NAME = os.environ.get("VECTOR_COLLECTION_NAME", "tool_trace_memory")
 QUERY_TOP_K = _get_int("QUERY_TOP_K", 5)
+
+USE_MEMORY = _get_bool("USE_MEMORY", False)
+MEMORY_TOP_K = _get_int("MEMORY_TOP_K", 3)
+MEMORY_FILTER = os.environ.get("MEMORY_FILTER", "successful_only")
+MEMORY_SNIPPET_MAX_CHARS = _get_int("MEMORY_SNIPPET_MAX_CHARS", 1200)
+MEMORY_STRICT = _get_bool("MEMORY_STRICT", False)
 
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
