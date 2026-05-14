@@ -1,83 +1,139 @@
 # tool-trace-RAG
 
-## Overview
-`tool-trace-RAG` is a research-oriented agent project focused on **improving tool-use quality through trace-based retrieval**.
+Trace-based memory for tool-calling agents.
 
-The system runs an OpenAI-compatible tool-calling agent in a deterministic customer-support domain, captures full observable run traces, and reuses relevant past traces as memory for future tasks.
+## What this project does
 
-## Goals
-The core goals are to build a reliable loop that can:
-1. Solve tasks with tool calls when needed.
-2. Measure task success and tool-call efficiency.
-3. Persist traces of real agent behavior.
-4. Index those traces in a local vector store.
-5. Retrieve relevant prior traces and inject them as compact prompt guidance.
+`tool-trace-RAG` runs an OpenAI-compatible tool-calling agent in a deterministic customer-support domain, records full run traces, and reuses prior traces as retrieval memory to improve later tool-use behavior.
 
-### Motivation
-Many agent systems underperform not only because of language-model limitations, but because they make inefficient tool decisions (wrong tool, missing tool, repeated tool calls, or unnecessary tool use). This project tests the hypothesis that **observable prior tool-use traces** can be reused as practical memory to guide better decisions on new but similar tasks.
+Core capabilities:
+- Tool-calling runtime with deterministic domain tools.
+- Evaluation harness for task success and tool-use efficiency.
+- Trace persistence to local JSON artifacts.
+- Local embedding + vector retrieval over traces.
+- Retrieval-time memory injection.
+- Online memory lifecycle (retrieve → run → persist → upsert).
+- Controlled baseline-vs-retrieval experiments.
+- Offline analysis layer under `analysis/` for experiments, learning curves, ablations, and plots.
 
-The experiment is structured to separate concerns so results are interpretable:
-- first prove the base tool-calling loop,
-- then establish evaluation baselines,
-- then add persistence,
-- then add retrieval infrastructure,
-- then inject retrieved examples into prompts.
+## Repository layout
 
-This staged design helps answer a clear question: whether trace-based memory changes agent behavior in useful ways, without mixing in unrelated system changes.
+- `tool_trace_rag/` — runtime, evaluation, memory, traces, experiments.
+- `scripts/` — CLI entrypoints.
+- `analysis/` — analysis code + derived artifacts.
+- `data/` — deterministic domain data + eval tasks.
+- `runs/` — runtime outputs (traces, vector stores, experiment/sequential artifacts).
+- `tests/` — unit/integration tests.
 
-## Current high-level architecture
-- **Agent runtime**: OpenAI-compatible chat-completions tool-calling loop.
-- **Domain tools**: deterministic customer/order/refund tools over mock data.
-- **Evaluation harness**: dataset-driven scoring for success and tool efficiency.
-- **Trace store**: local JSON trace persistence for every run.
-- **Memory index**: local embedding + vector search over persisted traces.
-- **Retrieval injector**: optional prompt-time memory context built from top-k similar traces.
+## Quickstart
 
-## Scope boundaries
-This repository focuses on local, reproducible infrastructure for trace capture, evaluation, indexing, retrieval injection, online memory updates, and controlled baseline-vs-retrieval experiments.
+See full setup in [`SETUP.md`](./SETUP.md).
 
-## Single-run online memory
-Use `--online-memory` when a completed run should immediately update local memory:
+```bash
+uv sync --extra dev
+cp .env.example .env
+uv run pytest
+```
+
+## Common workflows
+
+### 1) Run one task (real provider)
 
 ```bash
 uv run python scripts/run_task.py \
-  "Maya Chen asks if she can return the headphones from her last delivered order." \
+  "Maya Chen asks if she can return the headphones from her last delivered order."
+```
+
+### 2) Save traces + build memory corpus
+
+```bash
+uv run python scripts/run_task.py \
+  "Where is order ord_1003?" \
+  --save-trace \
+  --trace-dir runs/traces/local
+
+uv run python scripts/index_traces.py \
+  --trace-dir runs/traces/local \
+  --vector-dir runs/vector_store/local
+```
+
+### 3) Retrieval-only memory run
+
+```bash
+uv run python scripts/run_task.py \
+  "Can I return the headphones from my last delivered order?" \
+  --use-memory \
+  --trace-dir runs/traces/local \
+  --vector-dir runs/vector_store/local \
+  --top-k 3 \
+  --memory-filter successful_only
+```
+
+### 4) Online memory run (retrieve + update corpus)
+
+```bash
+uv run python scripts/run_task.py \
+  "Can I return the headphones from my last delivered order?" \
   --online-memory \
   --trace-dir runs/traces/online \
   --vector-dir runs/vector_store/online \
   --top-k 3
 ```
 
-`--use-memory` stays retrieval-only. `--online-memory` retrieves memories, runs the agent, persists the new trace, embeds it, and upserts it into the configured vector store.
-
-## Controlled memory experiments
-Run a two-arm experiment comparing no-memory baseline behavior against retrieval-only memory:
+### 5) Run controlled experiment
 
 ```bash
 uv run python scripts/run_experiment.py \
-  --dataset data/eval_tasks_milestone_02.json \
-  --memory-trace-dir runs/traces/memory \
-  --memory-vector-dir runs/vector_store/memory \
-  --output-dir runs/experiments/milestone-07-smoke \
+  --output-dir runs/experiments/smoke \
+  --memory-trace-dir runs/traces/local \
+  --memory-vector-dir runs/vector_store/local \
   --top-k 3 \
   --memory-filter successful_only
 ```
 
-The experiment runner writes `experiment_config.json`, `summary.json`, and `paired_results.jsonl`. The retrieval arm is read-only and does not update the memory corpus.
+Writes:
+- `experiment_config.json`
+- `summary.json`
+- `paired_results.jsonl`
 
-## Complete memory analysis
+### 6) Run sequential online-memory study
 
-Milestone-08 analysis code and derived artifacts live under `analysis/`. Analyze saved experiment artifacts without live LLM calls:
+```bash
+uv run python scripts/run_sequential_study.py \
+  --output-dir runs/sequential/default-sequence \
+  --ordering original \
+  --passes 1
+```
+
+### 7) Analyze saved artifacts (offline, no live LLM calls)
 
 ```bash
 uv run python analysis/scripts/analyze_experiment.py \
-  --experiment-dir runs/experiments/milestone-07-smoke \
-  --output-dir analysis/artifacts/milestone-08-smoke
+  --experiment-dir runs/experiments/smoke \
+  --output-dir analysis/artifacts/experiment-smoke
+
+uv run python analysis/scripts/analyze_learning_curve.py \
+  --sequence-dir runs/sequential/default-sequence \
+  --output-dir analysis/artifacts/learning-curve
+
+uv run python analysis/scripts/compare_ablations.py \
+  --experiments runs/experiments/topk-1 runs/experiments/topk-3 runs/experiments/topk-5 \
+  --output-dir analysis/artifacts/topk-ablation
 ```
 
-Sequential online-memory studies write runtime artifacts under `runs/sequential/`; their learning-curve reports and plots are generated under `analysis/artifacts/`.
+## Local/test-safe workflows (no provider calls)
 
-## Setup and usage
-For full local setup instructions (using `uv`), environment configuration, and script usage details, see:
+For deterministic validation without external API usage, use tests:
 
-- [`SETUP.md`](./SETUP.md)
+```bash
+uv run pytest
+```
+
+The test suite uses fakes/mocks for provider-dependent paths where appropriate.
+
+## Notes
+
+- Analysis outputs must be under `analysis/`.
+- Sequential runtime artifacts go under `runs/sequential/`.
+- Retrieval-only experiment arm does not mutate memory corpus.
+- Online memory mode does mutate corpus (persist + upsert).
