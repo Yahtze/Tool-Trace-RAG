@@ -65,6 +65,18 @@ uv run python scripts/run_experiment.py \
 
 The experiment runner writes `experiment_config.json`, `summary.json`, and `paired_results.jsonl`. The retrieval arm is read-only and does not update the memory corpus.
 
+## Complete memory analysis
+
+Milestone-08 analysis code and derived artifacts live under `analysis/`. Analyze saved experiment artifacts without live LLM calls:
+
+```bash
+uv run python analysis/scripts/analyze_experiment.py \
+  --experiment-dir runs/experiments/milestone-07-smoke \
+  --output-dir analysis/artifacts/milestone-08-smoke
+```
+
+Sequential online-memory studies write runtime artifacts under `runs/sequential/`; their learning-curve reports and plots are generated under `analysis/artifacts/`.
+
 ## Setup and usage
 For full local setup instructions (using `uv`), environment configuration, and script usage details, see:
 
