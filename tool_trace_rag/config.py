@@ -70,6 +70,7 @@ VECTOR_COLLECTION_NAME = os.environ.get("VECTOR_COLLECTION_NAME", "tool_trace_me
 QUERY_TOP_K = _get_int("QUERY_TOP_K", 5)
 
 USE_MEMORY = _get_bool("USE_MEMORY", False)
+ONLINE_MEMORY = _get_bool("ONLINE_MEMORY", False)
 MEMORY_TOP_K = _get_int("MEMORY_TOP_K", 3)
 MEMORY_FILTER = os.environ.get("MEMORY_FILTER", "successful_only")
 MEMORY_SNIPPET_MAX_CHARS = _get_int("MEMORY_SNIPPET_MAX_CHARS", 1200)
