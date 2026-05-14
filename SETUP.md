@@ -69,6 +69,8 @@ uv run python scripts/run_task.py "Maya Chen asks if she can return the headphon
   Trace output directory. Implies save trace.
 - `--use-memory`  
   Enable retrieval + prompt memory injection.
+- `--online-memory`  
+  Run single-task online lifecycle: retrieve, execute, persist trace, embed, and upsert.
 - `--vector-dir PATH`  
   Local vector store directory. Default: `VECTOR_DIR`.
 - `--collection NAME`  
@@ -93,6 +95,16 @@ uv run python scripts/run_task.py "Can I return the headphones from my last deli
   --trace-dir runs/traces \
   --top-k 3 \
   --memory-filter successful_only
+```
+
+Example with online memory enabled:
+```bash
+uv run python scripts/run_task.py "Can I return the headphones from my last delivered order?" \
+  --online-memory \
+  --use-memory \
+  --vector-dir runs/vector_store \
+  --trace-dir runs/traces \
+  --top-k 3
 ```
 
 ## 7) Build and query memory index (optional but recommended for `--use-memory`)
@@ -126,7 +138,7 @@ uv run python scripts/run_eval.py --save-traces --trace-dir runs/traces/eval-bas
 - Provider: `AGENT_BASE_URL`, `AGENT_API_KEY`, `AGENT_MODEL`, `AGENT_TIMEOUT_SECONDS`
 - Agent: `AGENT_MAX_TOOL_CALLS`
 - Paths: `CUSTOMER_SUPPORT_DATA_PATH`, `EVAL_TASKS_PATH`, `TRACE_DIR`, `VECTOR_DIR`, `VECTOR_COLLECTION_NAME`
-- Memory: `USE_MEMORY`, `MEMORY_TOP_K`, `MEMORY_FILTER`, `MEMORY_SNIPPET_MAX_CHARS`, `MEMORY_STRICT`
+- Memory: `USE_MEMORY`, `ONLINE_MEMORY`, `MEMORY_TOP_K`, `MEMORY_FILTER`, `MEMORY_SNIPPET_MAX_CHARS`, `MEMORY_STRICT`
 - Embeddings: `EMBEDDING_MODEL`
 
 ## 10) Recreate on another machine checklist

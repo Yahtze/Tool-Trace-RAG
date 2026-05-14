@@ -34,7 +34,21 @@ This staged design helps answer a clear question: whether trace-based memory cha
 - **Retrieval injector**: optional prompt-time memory context built from top-k similar traces.
 
 ## Scope boundaries
-This repository currently focuses on local, reproducible infrastructure for trace capture, evaluation, indexing, and retrieval injection. It does **not** include a full automated online memory update loop or formal A/B experimentation orchestration in the main flow.
+This repository focuses on local, reproducible infrastructure for trace capture, evaluation, indexing, retrieval injection, and single-run online memory updates. Formal A/B experimentation orchestration is still out of scope.
+
+## Single-run online memory
+Use `--online-memory` when a completed run should immediately update local memory:
+
+```bash
+uv run python scripts/run_task.py \
+  "Maya Chen asks if she can return the headphones from her last delivered order." \
+  --online-memory \
+  --trace-dir runs/traces/online \
+  --vector-dir runs/vector_store/online \
+  --top-k 3
+```
+
+`--use-memory` stays retrieval-only. `--online-memory` retrieves memories, runs the agent, persists the new trace, embeds it, and upserts it into the configured vector store.
 
 ## Setup and usage
 For full local setup instructions (using `uv`), environment configuration, and script usage details, see:

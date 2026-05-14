@@ -79,6 +79,7 @@ def test_run_task_help_documents_memory_flags():
     result = subprocess.run([sys.executable, "scripts/run_task.py", "--help"], check=True, capture_output=True, text=True)
 
     assert "--use-memory" in result.stdout
+    assert "--online-memory" in result.stdout
     assert "--vector-dir" in result.stdout
     assert "--top-k" in result.stdout
     assert "--memory-filter" in result.stdout

@@ -7,8 +7,10 @@ from typing import Any
 import chromadb
 
 from tool_trace_rag.config import QUERY_TOP_K, VECTOR_COLLECTION_NAME, VECTOR_DIR
+from tool_trace_rag.memory.documents import format_trace_document
 from tool_trace_rag.memory.embeddings import EmbeddingProvider, SentenceTransformerEmbeddingProvider
 from tool_trace_rag.memory.ingestion import FileSystemTraceSource, IndexSummary, TraceIngestionModule
+from tool_trace_rag.traces.store import TraceStore
 
 DEFAULT_VECTOR_DIR = VECTOR_DIR
 DEFAULT_COLLECTION_NAME = VECTOR_COLLECTION_NAME
@@ -40,6 +42,28 @@ class _ChromaVectorDocumentSink:
         )
 
 
+def upsert_trace_file(
+    trace_path: str | Path,
+    trace_dir: str | Path,
+    sink: Any,
+    embedding_provider: EmbeddingProvider,
+    reindex: bool = False,
+) -> str:
+    root = Path(trace_dir)
+    path = Path(trace_path)
+    trace = TraceStore(root).read_trace(path)
+    try:
+        relative = path.relative_to(root).as_posix()
+    except ValueError:
+        relative = path.name
+    document = format_trace_document(trace, source_path=path, relative_source_path=relative)
+    if not reindex and sink.has_id(document.document_id):
+        return document.document_id
+    embedding = embedding_provider.embed_documents([document.text])[0]
+    sink.upsert(document.document_id, document.text, document.metadata, embedding)
+    return document.document_id
+
+
 class TraceVectorStore:
     def __init__(
         self,
@@ -66,6 +90,16 @@ class TraceVectorStore:
         source = FileSystemTraceSource(trace_dir)
         sink = _ChromaVectorDocumentSink(self._collection)
         return self._ingestion.index(source=source, sink=sink, reindex=reindex)
+
+    def upsert_trace_file(self, trace_path: str | Path, trace_dir: str | Path, reindex: bool = False) -> str:
+        sink = _ChromaVectorDocumentSink(self._collection)
+        return upsert_trace_file(
+            trace_path=trace_path,
+            trace_dir=trace_dir,
+            sink=sink,
+            embedding_provider=self.embedding_provider,
+            reindex=reindex,
+        )
 
     def query(self, task: str, top_k: int = QUERY_TOP_K) -> list[QueryResult]:
         if top_k < 1:
