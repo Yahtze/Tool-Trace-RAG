@@ -4,3 +4,6 @@ implementation-milestones/
 __pycache__/
 runs/
 codebase-refactors/
+
+# Local scratchpad
+TODO.md

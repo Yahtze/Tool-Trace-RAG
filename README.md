@@ -34,7 +34,7 @@ This staged design helps answer a clear question: whether trace-based memory cha
 - **Retrieval injector**: optional prompt-time memory context built from top-k similar traces.
 
 ## Scope boundaries
-This repository focuses on local, reproducible infrastructure for trace capture, evaluation, indexing, retrieval injection, and single-run online memory updates. Formal A/B experimentation orchestration is still out of scope.
+This repository focuses on local, reproducible infrastructure for trace capture, evaluation, indexing, retrieval injection, online memory updates, and controlled baseline-vs-retrieval experiments.
 
 ## Single-run online memory
 Use `--online-memory` when a completed run should immediately update local memory:
@@ -49,6 +49,21 @@ uv run python scripts/run_task.py \
 ```
 
 `--use-memory` stays retrieval-only. `--online-memory` retrieves memories, runs the agent, persists the new trace, embeds it, and upserts it into the configured vector store.
+
+## Controlled memory experiments
+Run a two-arm experiment comparing no-memory baseline behavior against retrieval-only memory:
+
+```bash
+uv run python scripts/run_experiment.py \
+  --dataset data/eval_tasks_milestone_02.json \
+  --memory-trace-dir runs/traces/memory \
+  --memory-vector-dir runs/vector_store/memory \
+  --output-dir runs/experiments/milestone-07-smoke \
+  --top-k 3 \
+  --memory-filter successful_only
+```
+
+The experiment runner writes `experiment_config.json`, `summary.json`, and `paired_results.jsonl`. The retrieval arm is read-only and does not update the memory corpus.
 
 ## Setup and usage
 For full local setup instructions (using `uv`), environment configuration, and script usage details, see:
